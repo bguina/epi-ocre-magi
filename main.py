@@ -1,12 +1,10 @@
 #!/usr/bin/env python
 
-from PIL import Image
+import ocre_magi
 
 def main():
-  col = Image.open("assets/captcha-samples.png")
-  gray = col.convert('L')
-  bw = gray.point(lambda x: 255 if x<128 else 0, '1')
-  bw.save("output/result_bw.png")
+  ocr = ocre_magi.OCReMagi()
+  ocr.mainloop()
 
 if __name__ == '__main__':
   main()
