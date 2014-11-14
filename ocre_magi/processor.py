@@ -10,6 +10,7 @@ class Processor:
       self._step_bw,
       self._step_blur,
       self._step_otsu,
+      self._step_box,
       self._step_rotate,
     )
     self.image = None
@@ -39,8 +40,8 @@ class Processor:
   def _step_otsu(self):
     self.image.apply_otsu_binarization()
 
+  def _step_box(self):
+    self.image.apply_bounding_box()
+
   def _step_rotate(self):
     pass
-
-
-

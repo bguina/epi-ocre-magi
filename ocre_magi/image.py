@@ -22,3 +22,12 @@ class Image:
   def apply_otsu_binarization(self):
     ret, self.image = cv2.threshold(self.image,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
 
+  def apply_bounding_box(self):
+    tmp = cv2.bitwise_not(self.image)
+    contours, hierarchy = cv2.findContours(tmp, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    i = 0
+    for cnt in contours:
+      i += 1
+      x, y, w, h = cv2.boundingRect(cnt)
+      cv2.rectangle(self.image, (x, y), (x + w, y + h), (0, 0, 0), 1)
