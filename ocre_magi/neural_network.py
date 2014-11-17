@@ -1,8 +1,9 @@
+#!/usr/bin/env python
 
 #import pybrain
 
 class NeuralNetwork:
-  DEFAULT_PATH='networks/default'
+  DEFAULT = 'networks/default'
 
   def __init__(self, path=None):
     self.load(path)
@@ -10,4 +11,10 @@ class NeuralNetwork:
   def load(self, path):
     pass
 
+# neural network testing
+def main():
+  pass
+
+if __name__ == '__main__':
+  main()
 

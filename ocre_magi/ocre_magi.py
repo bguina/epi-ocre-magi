@@ -11,7 +11,7 @@ from neural_network import NeuralNetwork
 
 class OCReMagi(tk.Tk):
   
-  def __init__(self):
+  def __init__(self, image_path=None, process_image=False):
     tk.Tk.__init__(self)
     self.wm_title('OCReMagi')
     self.minsize(width=800, height=600)
@@ -28,16 +28,27 @@ class OCReMagi(tk.Tk):
 
     self.processor = Processor(self)
 
-  def _on_open_image(self):
-    selected_file = tkFileDialog.askopenfilename(parent=self)
-    if selected_file:
+    if image_path:
+      self._load(image_path)
+      
+      if process_image:
+        while not self.processor.is_done():
+          self.processor.step_process()
+
+        self._render()
+
+  def _load(self, image_path):
+    if image_path:
       try:
-        self.processor.open(selected_file)
+        self.processor.open(image_path)
 
       except IOError as e:
         tkMessageBox.showerror("Invalid file path", e)
+    
+      self._render()
 
-    self._render()
+  def _on_open_image(self):
+    self._load(tkFileDialog.askopenfilename(parent=self))
 
   def _on_step_process(self):
     if not self.processor.is_done():
@@ -45,7 +56,7 @@ class OCReMagi(tk.Tk):
       self._render()
 
   def _render(self):
-      self.view.tkimage = ImageTk.PhotoImage(PIL.Image.fromarray(self.processor.image.image))
-      self.view.configure(image=self.view.tkimage)
+    self.view.tkimage = ImageTk.PhotoImage(PIL.Image.fromarray(self.processor.image.image))
+    self.view.configure(image=self.view.tkimage)
 
     
