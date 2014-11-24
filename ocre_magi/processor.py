@@ -11,6 +11,7 @@ class Processor:
       self._step_grayscale,
       self._step_blur,
       self._step_tresholding,
+      self._step_line_detection,
       self._step_boxing,
       self._step_crossing,
     )
@@ -44,12 +45,10 @@ class Processor:
     self.image.apply_thresholding()
 
   def _step_boxing(self):
-    self.contours, self.hierarchy = self.image.contours()
-    
-    for cnt in self.contours:
-      x, y, w, h = cv2.boundingRect(cnt)
-      self.image.draw_box(x, y, w, h)
+    self.image.apply_boxing()
 
   def _step_crossing(self):
     pass
 
+  def _step_line_detection(self):
+    self.image._detect_lines()
