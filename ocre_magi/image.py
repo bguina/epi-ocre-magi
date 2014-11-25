@@ -40,6 +40,9 @@ class Image:
     max_line_gap = 100
     lines = cv2.HoughLinesP(self.negative, 1, numpy.pi/180, 80, None, min_line_length, max_line_gap)
 
+    if not lines:
+      return
+
     for x1, y1, x2, y2 in lines[0]:
       self._draw_line(x1, y1, x2, y2)
 
