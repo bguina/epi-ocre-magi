@@ -22,6 +22,7 @@ class Processor:
     self.current_step = 0
     self.image = Image()
     self.image.load(path)
+    self.network = NeuralNetwork('default')
     return self.image
 
   def is_done(self):
@@ -54,5 +55,6 @@ class Processor:
     # for every character found
     for character in (self.image, ):
       projections = character.apply_projections()
+      print self.network.recognize(projections)
 
 

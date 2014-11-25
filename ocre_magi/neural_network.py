@@ -21,6 +21,7 @@ from numpy.random import multivariate_normal
 from pybrain.structure.modules   import SoftmaxLayer
 
 from image import Image
+import cv2
 
 class NeuralNetwork:
   DEFAULT_PATH = 'default.txt'
@@ -29,9 +30,9 @@ class NeuralNetwork:
   TARGETS = string.printable[:-5] # trailing "\t\n\r\x0b\x0c" characters must be ignored. the space character remains.
   LABELS = ['num_' + TARGETS[i]                       for i in xrange(0, 10)] + [        # numbers
     TARGETS[i].lower() + ('_small' if i < 36 else '') for i in xrange(10, 62)] + [       # lower (10,36) and upper (36,62) alpha 
-    'sym_' + ['exclmark','quotemark','num','dollar','amper','apos','lparen','rparen','star','plus','comma','hyphen',
-    'point','slash','colon','scolon','pcent','lthan', 'equal','gthan','questmark','arob', 'lsqbracket',
-    'bquote','rsqbracket','caret','under','bquote','lcbracket','pipe','rcbracket','tilde','space',][i-62] 
+    'sym_' + ['exclmark','quotmark','num','dollar','pcent','amper','apos','lparen','rparen','star','plus','comma','hyphen',
+    'point','slash','colon','scolon','lthan', 'equal','gthan','questmark','arob', 'lsqbracket',
+    'bslash','rsqbracket','caret','under','bquote','lcbracket','pipe','rcbracket','tilde','space',][i-62] 
                                                       for i in xrange(62, len(TARGETS))] # symbols (ascii order from range 62)
   
   def __init__(self, name, log_level=logging.WARNING):
@@ -43,7 +44,7 @@ class NeuralNetwork:
     self.train_path = os.path.join(self.base_path, 'training')
     self.logger.info('using network {0}'.format(self.name))
     #self.net = buildNetwork(1, 5, len(self.TARGETS), outclass=SoftmaxLayer)
-    self.net = buildNetwork(800, 10, len(self.TARGETS), outclass=SoftmaxLayer)
+    self.net = buildNetwork(10*50, 5, len(self.TARGETS), outclass=SoftmaxLayer)
     if os.path.exists(self.save_path):
       self.load()
   
@@ -64,42 +65,61 @@ class NeuralNetwork:
       self.logger.error('error loading {0} from {1}: {2}'.format(self.name, self.save_path, e))
       sys.exit(2)
 
-  def train(self, ):
+  def recognize(self, projections):
+    print self.net.activate(projections)
 
-    ds = None
-    for root, dirs, files in os.walk(self.train_path):
-      print root, dirs, files
+  def train(self):
 
+    ds = ClassificationDataSet(10*50, target=1, nb_classes=len(self.TARGETS), class_labels=self.LABELS)
+   
+    for dir_path in os.listdir(self.train_path):
+      for file_path in os.listdir(os.path.join(self.train_path, dir_path)):
+          if file_path[-3:] == '.db':
+            continue
 
-      for file_path in files:
-        for i in range(len(self.LABELS)):
-          if re.match('.*{0}\.(bmp|png)'.format(self.LABELS[i]), file_path):
-            image = Image()
-            image.load(os.path.join(root, file_path))
-            image.apply_grayscale()
-            image.apply_gaussian_blur(3, 3)
-            image.apply_thresholding()
-            v = image.apply_projections()
-            if ds is None:
-              ds = ClassificationDataSet(len(v), target=1, nb_classes=len(self.TARGETS), class_labels=self.LABELS)
-            self.logger.info('adding sample {0}, target: {1}'.format(file_path, self.LABELS[i]))
-            ds.addSample(v, i)
-            
+          matched = False
+          for i in range(len(self.LABELS)):
+            label_match = re.match('^(.*(_|-))?{0}\.(bmp|png)$'.format(self.LABELS[i]), file_path)
+            if label_match:
+              self.logger.info('adding sample {0}, target: {1}'.format(file_path, self.LABELS[i]))
+              image = Image()
+              image.load(os.path.join(self.train_path, dir_path, file_path))
+
+              image.apply_grayscale()
+              image.apply_gaussian_blur(3, 3)
+              image.apply_thresholding()
+              v = image.apply_projections()
+              
+              #for y in range(50):
+              #  for x in range(50):
+              #    print image.image[y][x],
+              #  print            
+              
+              #cv2.imshow('dst_rt', image.image)
+              #cv2.waitKey(0)
+              #cv2.destroyAllWindows()
+              
+
+              ds.addSample(v, i)
+              
+              matched = True
+
+          if not matched:
+            self.logger.error('file {0} does not match any target label'.format(file_path))
+            sys.exit(2)
+
 
     tstdata, trndata = ds.splitWithProportion( 0.25 )
     tstdata._convertToOneOfMany()
     trndata._convertToOneOfMany()
-    print trndata.outdim
-    print self.net.outdim
-    trainer = BackpropTrainer(self.net, dataset=trndata, momentum=0.99, verbose=True, weightdecay=0.01)
-    #trainer = BackpropTrainer(self.net, self.ds)
-    self.logger.debug('labels\n{0}'.format(str(self.LABELS)))
+    #trainer = BackpropTrainer(self.net, dataset=trndata, momentum=0.99, verbose=True, weightdecay=0.01)
+    trainer = BackpropTrainer(self.net, trndata)
     
     try:
       #self.logger.info('training\n{0}'.format(str(trainer.trainUntilConvergence())))
-      self.logger.info('training\n')
+      #self.logger.info('training\n')
       while True:
-        trainer.trainEpochs(5)
+        trainer.trainEpochs(50)
 
         trnresult = percentError( trainer.testOnClassData(), trndata['class'])
         tstresult = percentError( trainer.testOnClassData( dataset=tstdata ), tstdata['class'] )
@@ -108,7 +128,6 @@ class NeuralNetwork:
 
     except KeyboardInterrupt as e:
       self.logger.info('\ntraining interrupted, saving before exiting...'.format(self.name, self.save_path))
-      print self.net.activate((1,1))
       self.save()
 
   def save(self):

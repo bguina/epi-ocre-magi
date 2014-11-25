@@ -30,7 +30,7 @@ class Image:
       x, y, w, h = cv2.boundingRect(cnt)
       self._draw_box(x, y, w, h)
 
-  def apply_projections(self, nsections=4):
+  def apply_projections(self, nsections=5):
 
     height, width = self.image.shape
     sz = 50
@@ -38,7 +38,7 @@ class Image:
     assert width == sz
     k = nsections
     q = sz / k
-    v = k * k * sz * [0]
+    v = (k + k) * sz * [0]
 
     # apply projections
 
@@ -46,17 +46,20 @@ class Image:
     for y in range(0, sz):
       for x in range(0, sz):
         pxl = self.image[y][x]
-        if pxl:
-          v[x/q+y] = 1
-          x = x % q + q
-      
+        if not pxl:
+          idx = y + sz * (x / q)
+          v[idx] = 1
+          x = x % q + q - 1
+    
+
     # vertical projections
     for x in range(0, sz):
       for y in range(0, sz):
         pxl = self.image[y][x]
-        if pxl:
-          v[k*height + y/q+x] = 1
-          y = y % q + q
+        if not pxl:
+          idx = k*height + x + sz * (y / q)
+          v[idx] = 1
+          y = y % q + q - 1
 
     return v
 
