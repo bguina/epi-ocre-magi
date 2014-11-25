@@ -20,6 +20,8 @@ from scipy import diag, arange, meshgrid, where
 from numpy.random import multivariate_normal
 from pybrain.structure.modules   import SoftmaxLayer
 
+import operator
+
 from image import Image
 import cv2
 
@@ -66,8 +68,10 @@ class NeuralNetwork:
       sys.exit(2)
 
   def recognize(self, projections):
-    results = self.net.activate(projections)
-    return {self.LABELS[i]: results[i] for i in range(len(results))}
+    probs = self.net.activate(projections)
+    results = {self.LABELS[i]: probs[i] for i in range(len(probs))}
+    top_res = sorted(results.items(), key = operator.itemgetter(1))[:5]
+    return top_res
 
   def train(self):
 
