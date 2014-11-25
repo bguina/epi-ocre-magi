@@ -71,7 +71,7 @@ class NeuralNetwork:
   def recognize(self, projections):
     probs = self.net.activate(projections)
     results = {self.LABELS[i]: probs[i] for i in range(len(probs))}
-    top_res = sorted(results.items(), key = operator.itemgetter(1))[:5]
+    top_res = sorted(results.items(), key = operator.itemgetter(1), reverse = True)[:5]
     return top_res
 
   def train(self):
