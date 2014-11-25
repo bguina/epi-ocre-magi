@@ -42,6 +42,7 @@ class NeuralNetwork:
     self.base_path = os.path.relpath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
     self.save_path = os.path.join(self.base_path, 'networks', self.name + '.xml')
     self.train_path = os.path.join(self.base_path, 'training')
+    self.test_path = os.path.join(self.base_path, 'test')
     self.logger.info('using network {0}'.format(self.name))
     #self.net = buildNetwork(1, 5, len(self.TARGETS), outclass=SoftmaxLayer)
     self.net = buildNetwork(10*50, 5, len(self.TARGETS), outclass=SoftmaxLayer)
@@ -71,10 +72,14 @@ class NeuralNetwork:
 
   def train(self):
 
-    ds = ClassificationDataSet(10*50, target=1, nb_classes=len(self.TARGETS), class_labels=self.LABELS)
-   
-    for dir_path in os.listdir(self.train_path):
-      for file_path in os.listdir(os.path.join(self.train_path, dir_path)):
+    def fetch_datasets(self, path):
+      ds = ClassificationDataSet(10*50, target=1, nb_classes=len(self.TARGETS), class_labels=self.LABELS)
+     
+      for dir_path in os.listdir(path):
+        if dir_path[0] == '.':
+          continue
+          
+        for file_path in os.listdir(os.path.join(path, dir_path)):
           if file_path[-3:] == '.db':
             continue
 
@@ -84,7 +89,7 @@ class NeuralNetwork:
             if label_match:
               self.logger.info('adding sample {0}, target: {1}'.format(file_path, self.LABELS[i]))
               image = Image()
-              image.load(os.path.join(self.train_path, dir_path, file_path))
+              image.load(os.path.join(path, dir_path, file_path))
 
               image.apply_grayscale()
               image.apply_gaussian_blur(3, 3)
@@ -109,8 +114,10 @@ class NeuralNetwork:
             self.logger.error('file {0} does not match any target label'.format(file_path))
             sys.exit(2)
 
+      return ds
 
-    tstdata, trndata = ds.splitWithProportion( 0.25 )
+    trndata = fetch_datasets(self, self.train_path)
+    tstdata = fetch_datasets(self, self.test_path)
     tstdata._convertToOneOfMany()
     trndata._convertToOneOfMany()
     #trainer = BackpropTrainer(self.net, dataset=trndata, momentum=0.99, verbose=True, weightdecay=0.01)
