@@ -46,15 +46,20 @@ class Processor:
     self.image.apply_thresholding()
 
   def _step_line_detection(self):
-    self.image._detect_lines()
+    pass
+    #self.image._detect_lines()
 
   def _step_boxing(self):
-    self.image.apply_boxing()
+    pass
+    #self.image.apply_boxing()
 
   def _step_features_extraction(self):
     # for every character found
     for character in (self.image, ):
       projections = character.apply_projections()
-      print self.network.recognize(projections)
+      results = self.network.recognize(projections)
+      total = 0.0
+      for label, result in results.iteritems():
+        print label, result
 
 

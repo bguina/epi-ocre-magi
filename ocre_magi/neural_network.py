@@ -66,7 +66,8 @@ class NeuralNetwork:
       sys.exit(2)
 
   def recognize(self, projections):
-    print self.net.activate(projections)
+    results = self.net.activate(projections)
+    return {self.LABELS[i]: results[i] for i in range(len(results))}
 
   def train(self):
 
