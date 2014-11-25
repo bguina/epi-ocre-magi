@@ -58,8 +58,5 @@ class Processor:
     for character in (self.image, ):
       projections = character.apply_projections()
       results = self.network.recognize(projections)
-      total = 0.0
-      for label, result in results.iteritems():
-        print label, result
-
+      print results
 
