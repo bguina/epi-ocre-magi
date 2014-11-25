@@ -3,6 +3,7 @@ from PIL import Image as PILImage
 import cv2
 
 from image import Image
+from neural_network import NeuralNetwork
 
 class Processor:
 
@@ -13,15 +14,14 @@ class Processor:
       self._step_tresholding,
       self._step_line_detection,
       self._step_boxing,
-      self._step_crossing,
+      self._step_features_extraction,
     )
     self.image = None
-    self.inputs = []
-
 
   def open(self, path):
     self.current_step = 0
-    self.image = Image(path)
+    self.image = Image()
+    self.image.load(path)
     return self.image
 
   def is_done(self):
@@ -44,11 +44,15 @@ class Processor:
   def _step_tresholding(self):
     self.image.apply_thresholding()
 
+  def _step_line_detection(self):
+    self.image._detect_lines()
+
   def _step_boxing(self):
     self.image.apply_boxing()
 
-  def _step_crossing(self):
-    pass
+  def _step_features_extraction(self):
+    # for every character found
+    for character in (self.image, ):
+      projections = character.apply_projections()
 
-  def _step_line_detection(self):
-    self.image._detect_lines()
+

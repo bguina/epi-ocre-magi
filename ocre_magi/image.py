@@ -6,9 +6,12 @@ import numpy
 
 class Image:
 
-  def __init__(self, path):
-    self.image = cv2.imread(path)
+  def __init__(self, image=None):
+    self.image = image
     self.negative_image = None
+
+  def load(self, path):
+    self.image = cv2.imread(path)
 
   def apply_grayscale(self):
     self.image = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
@@ -26,6 +29,37 @@ class Image:
     for cnt in self.contours:
       x, y, w, h = cv2.boundingRect(cnt)
       self._draw_box(x, y, w, h)
+
+  def apply_projections(self, nsections=4):
+
+    height, width = self.image.shape
+    sz = 50
+    assert height == sz
+    assert width == sz
+    k = nsections
+    q = sz / k
+    v = k * k * sz * [0]
+
+    # apply projections
+
+    # horizontal projections
+    for y in range(0, sz):
+      for x in range(0, sz):
+        pxl = self.image[y][x]
+        if pxl:
+          v[x/q+y] = 1
+          x = x % q + q
+      
+    # vertical projections
+    for x in range(0, sz):
+      for y in range(0, sz):
+        pxl = self.image[y][x]
+        if pxl:
+          v[k*height + y/q+x] = 1
+          y = y % q + q
+
+    return v
+
 
   def _detect_contours(self):
     tmp = self.negative
